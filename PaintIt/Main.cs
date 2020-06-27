@@ -120,6 +120,7 @@ namespace PaintIt
 
         private void btnDraw_Click(object sender, EventArgs e)
         {
+            Bitmap GrayScaleBmp;
             if (pbxPreview.Image == null)
             {
                 MessageBox.Show("No image selected. Click 'Browse' to select an image.", Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -150,6 +151,8 @@ namespace PaintIt
                     _lastPoint = new Point(-1, -1);
                     _pid = GetActiveProcess();
 
+                    GrayScaleBmp = MakeGrayScale(bmp);
+                    pbxPreview.Image = GrayScaleBmp;
                     Draw(bmp, overlay.Pos.X, overlay.Pos.Y);
                     WindowState = FormWindowState.Normal;
                 }
@@ -179,6 +182,36 @@ namespace PaintIt
             {
                 MessageBox.Show(ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+
+        private Bitmap MakeGrayScale(Bitmap originalBmp)
+        {
+            Bitmap grayScaleBmp = new Bitmap(originalBmp.Width, originalBmp.Height);
+
+            using(Graphics g = Graphics.FromImage(grayScaleBmp))
+            {
+                ColorMatrix colorMatrix = new ColorMatrix(
+                    new float[][]
+                    {
+                        new float[] {.3f, .3f, .3f, 0, 0},
+                        new float[] {.59f, .59f, .59f, 0, 0},
+                        new float[] {.11f, .11f, .11f, 0, 0},
+                        new float[] {0, 0, 0, 1, 0},
+                        new float[] {0, 0, 0, 0, 1}
+                    });
+
+
+                using (ImageAttributes attributes = new ImageAttributes())
+                { 
+                    attributes.SetColorMatrix(colorMatrix);
+                
+                    g.DrawImage(originalBmp, new Rectangle(0, 0, originalBmp.Width, originalBmp.Height),
+                                0, 0, originalBmp.Width, originalBmp.Height, GraphicsUnit.Pixel, attributes);
+                }
+            }
+
+            return grayScaleBmp;
         }
     }
 }
